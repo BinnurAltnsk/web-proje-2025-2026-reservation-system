@@ -47,9 +47,7 @@ public class SecurityConfig {
 
                     config.setAllowedOrigins(List.of(
                             "http://localhost:5173",
-                            "http://localhost:3000",
-                            "https://web-proje-2025-2026-reservation-system-production-1590.up.railway.app",
-                            "http://web-proje-2025-2026-reservation-system-production-1590.up.railway.app",
+                            "http://localhost:3000",                            
                             "https://web-midterm-react-production.up.railway.app/",
                             "http://web-midterm-react-production.up.railway.app/"
                     ));
