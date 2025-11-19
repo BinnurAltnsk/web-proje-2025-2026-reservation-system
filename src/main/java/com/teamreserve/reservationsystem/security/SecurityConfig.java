@@ -49,7 +49,9 @@ public class SecurityConfig {
                             "http://localhost:5173",
                             "http://localhost:3000",
                             "https://web-proje-2025-2026-reservation-system-production-1590.up.railway.app",
-                            "http://web-proje-2025-2026-reservation-system-production-1590.up.railway.app"
+                            "http://web-proje-2025-2026-reservation-system-production-1590.up.railway.app",
+                            "https://web-midterm-react-production.up.railway.app/",
+                            "http://web-midterm-react-production.up.railway.app/"
                     ));
 
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
