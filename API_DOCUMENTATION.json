@@ -1,0 +1,2505 @@
+{
+  "apiVersion": "1.0.0",
+  "baseUrl": "/api",
+  "title": "Conference Room Reservation System API Documentation",
+  "description": "Complete API documentation for the conference room reservation system backend",
+  "endpoints": [
+    {
+      "category": "Authentication",
+      "endpoints": [
+        {
+          "name": "Login",
+          "description": "Authenticates user with email and password, returns JWT token and user information",
+          "method": "POST",
+          "url": "/api/auth/login",
+          "requestHeaders": {
+            "Content-Type": "application/json"
+          },
+          "requestBody": {
+            "email": {
+              "type": "string",
+              "required": true,
+              "description": "User's email address",
+              "example": "user@example.com",
+              "validation": "Must be a valid email format"
+            },
+            "password": {
+              "type": "string",
+              "required": true,
+              "description": "User's password",
+              "example": "password123",
+              "validation": "Minimum 6 characters"
+            }
+          },
+          "responseBody": {
+            "token": {
+              "type": "string",
+              "description": "JWT authentication token",
+              "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            },
+            "user": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "long",
+                  "example": 1
+                },
+                "name": {
+                  "type": "string",
+                  "example": "Ahmet Yılmaz"
+                },
+                "email": {
+                  "type": "string",
+                  "example": "user@example.com"
+                },
+                "phone": {
+                  "type": "string",
+                  "example": "05551234567"
+                },
+                "role": {
+                  "type": "string",
+                  "example": "user",
+                  "description": "Either 'user' or 'admin'"
+                }
+              }
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 400,
+              "message": "Invalid email or password format"
+            },
+            {
+              "code": 401,
+              "message": "Invalid credentials"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleRequest": {
+            "email": "user@example.com",
+            "password": "password123"
+          },
+          "exampleResponse": {
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "user": {
+              "id": 1,
+              "name": "Ahmet Yılmaz",
+              "email": "user@example.com",
+              "phone": "05551234567",
+              "role": "user"
+            }
+          }
+        },
+        {
+          "name": "Register",
+          "description": "Creates a new user account and returns JWT token with user information",
+          "method": "POST",
+          "url": "/api/auth/register",
+          "requestHeaders": {
+            "Content-Type": "application/json"
+          },
+          "requestBody": {
+            "name": {
+              "type": "string",
+              "required": true,
+              "description": "User's full name",
+              "example": "Ahmet Yılmaz",
+              "validation": "Minimum 3 characters"
+            },
+            "email": {
+              "type": "string",
+              "required": true,
+              "description": "User's email address",
+              "example": "user@example.com",
+              "validation": "Must be a valid email format, must be unique"
+            },
+            "password": {
+              "type": "string",
+              "required": true,
+              "description": "User's password",
+              "example": "password123",
+              "validation": "Minimum 6 characters"
+            },
+            "phone": {
+              "type": "string",
+              "required": true,
+              "description": "User's phone number",
+              "example": "05551234567",
+              "validation": "Must be 10-11 digits"
+            }
+          },
+          "responseBody": {
+            "message": {
+              "type": "string",
+              "example": "User registered successfully!"
+            },
+            "user": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "long",
+                  "example": 1
+                },
+                "name": {
+                  "type": "string",
+                  "example": "Ahmet Yılmaz"
+                },
+                "email": {
+                  "type": "string",
+                  "example": "user@example.com"
+                },
+                "phone": {
+                  "type": "string",
+                  "example": "05551234567"
+                },
+                "role": {
+                  "type": "string",
+                  "example": "user"
+                }
+              }
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 400,
+              "message": "Email already exists / Invalid input data"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleRequest": {
+            "name": "Ahmet Yılmaz",
+            "email": "user@example.com",
+            "password": "password123",
+            "phone": "05551234567"
+          },
+          "exampleResponse": {
+            "message": "User registered successfully!",
+            "user": {
+              "id": 1,
+              "name": "Ahmet Yılmaz",
+              "email": "user@example.com",
+              "phone": "05551234567",
+              "role": "user"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "description": "Logs out the current user (client should discard the JWT token)",
+          "method": "POST",
+          "url": "/api/auth/logout",
+          "requestHeaders": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer <token>"
+          },
+          "requestBody": null,
+          "responseBody": {
+            "message": {
+              "type": "string",
+              "example": "Logged out successfully"
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            }
+          ],
+          "exampleResponse": {
+            "message": "Logged out successfully"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Salons (Conference Rooms)",
+      "endpoints": [
+        {
+          "name": "GetAllSalons",
+          "description": "Returns list of all available conference rooms/salons",
+          "method": "GET",
+          "url": "/api/salons",
+          "requestHeaders": {},
+          "requestBody": null,
+          "queryParameters": {},
+          "responseBody": {
+            "type": "array",
+            "items": {
+              "id": {
+                "type": "long",
+                "example": 1
+              },
+              "name": {
+                "type": "string",
+                "example": "Atatürk Konferans Salonu"
+              },
+              "location": {
+                "type": "string",
+                "example": "İstanbul / Kadıköy"
+              },
+              "capacity": {
+                "type": "integer",
+                "example": 150
+              },
+              "description": {
+                "type": "string",
+                "example": "Modern ve donanımlı konferans salonu"
+              },
+              "price": {
+                "type": "double",
+                "example": 500.0,
+                "description": "Price per hour in TL"
+              },
+              "imageUrl": {
+                "type": "string",
+                "example": "https://example.com/images/salon1.jpg"
+              },
+              "features": {
+                "type": "array",
+                "items": "string",
+                "example": ["Projeksiyon", "Ses Sistemi", "Klima", "WiFi"]
+              }
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleResponse": [
+            {
+              "id": 1,
+              "name": "Atatürk Konferans Salonu",
+              "location": "İstanbul / Kadıköy",
+              "capacity": 150,
+              "description": "Modern ve donanımlı konferans salonu",
+              "price": 500.0,
+              "imageUrl": "https://example.com/images/salon1.jpg",
+              "features": ["Projeksiyon", "Ses Sistemi", "Klima", "WiFi"]
+            }
+          ]
+        },
+        {
+          "name": "GetSalonById",
+          "description": "Returns detailed information about a specific salon by ID",
+          "method": "GET",
+          "url": "/api/salons/{id}",
+          "requestHeaders": {},
+          "pathParameters": {
+            "id": {
+              "type": "long",
+              "required": true,
+              "description": "Salon ID",
+              "example": 1
+            }
+          },
+          "requestBody": null,
+          "responseBody": {
+            "id": {
+              "type": "long",
+              "example": 1
+            },
+            "name": {
+              "type": "string",
+              "example": "Atatürk Konferans Salonu"
+            },
+            "location": {
+              "type": "string",
+              "example": "İstanbul / Kadıköy"
+            },
+            "capacity": {
+              "type": "integer",
+              "example": 150
+            },
+            "description": {
+              "type": "string",
+              "example": "Modern ve donanımlı konferans salonu"
+            },
+            "price": {
+              "type": "double",
+              "example": 500.0
+            },
+            "imageUrl": {
+              "type": "string",
+              "example": "https://example.com/images/salon1.jpg"
+            },
+            "features": {
+              "type": "array",
+              "items": "string",
+              "example": ["Projeksiyon", "Ses Sistemi", "Klima", "WiFi"]
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 404,
+              "message": "Salon not found"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleResponse": {
+            "id": 1,
+            "name": "Atatürk Konferans Salonu",
+            "location": "İstanbul / Kadıköy",
+            "capacity": 150,
+            "description": "Modern ve donanımlı konferans salonu",
+            "price": 500.0,
+            "imageUrl": "https://example.com/images/salon1.jpg",
+            "features": ["Projeksiyon", "Ses Sistemi", "Klima", "WiFi"]
+          }
+        },
+        {
+          "name": "CheckSalonAvailability",
+          "description": "Checks if a salon is available for the specified date and time range",
+          "method": "GET",
+          "url": "/api/salons/{id}/availability",
+          "requestHeaders": {},
+          "pathParameters": {
+            "id": {
+              "type": "long",
+              "required": true,
+              "description": "Salon ID",
+              "example": 1
+            }
+          },
+          "queryParameters": {
+            "date": {
+              "type": "string",
+              "required": true,
+              "description": "Date in YYYY-MM-DD format",
+              "example": "2025-11-25"
+            },
+            "startTime": {
+              "type": "string",
+              "required": true,
+              "description": "Start time in HH:mm format",
+              "example": "09:00"
+            },
+            "endTime": {
+              "type": "string",
+              "required": true,
+              "description": "End time in HH:mm format",
+              "example": "12:00"
+            }
+          },
+          "requestBody": null,
+          "responseBody": {
+            "available": {
+              "type": "boolean",
+              "description": "Whether the salon is available",
+              "example": true
+            },
+            "conflictingReservations": {
+              "type": "array",
+              "description": "List of conflicting reservations if not available",
+              "example": []
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 400,
+              "message": "Invalid date or time format"
+            },
+            {
+              "code": 404,
+              "message": "Salon not found"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleResponse": {
+            "available": true,
+            "conflictingReservations": []
+          }
+        },
+        {
+          "name": "CreateSalon",
+          "description": "Creates a new salon (Admin only)",
+          "method": "POST",
+          "url": "/api/salons",
+          "requestHeaders": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer <admin_token>"
+          },
+          "requestBody": {
+            "name": {
+              "type": "string",
+              "required": true,
+              "example": "Atatürk Konferans Salonu"
+            },
+            "location": {
+              "type": "string",
+              "required": true,
+              "example": "İstanbul / Kadıköy"
+            },
+            "capacity": {
+              "type": "integer",
+              "required": true,
+              "example": 150,
+              "validation": "Must be > 0"
+            },
+            "price": {
+              "type": "double",
+              "required": true,
+              "example": 500.0,
+              "validation": "Must be > 0"
+            },
+            "description": {
+              "type": "string",
+              "required": false,
+              "example": "Modern ve donanımlı konferans salonu"
+            },
+            "imageUrl": {
+              "type": "string",
+              "required": false,
+              "example": "https://example.com/images/salon1.jpg"
+            },
+            "features": {
+              "type": "array",
+              "items": "string",
+              "required": false,
+              "example": ["Projeksiyon", "Ses Sistemi", "Klima"]
+            }
+          },
+          "responseBody": {
+            "id": {
+              "type": "long",
+              "example": 1
+            },
+            "name": {
+              "type": "string",
+              "example": "Atatürk Konferans Salonu"
+            },
+            "location": {
+              "type": "string",
+              "example": "İstanbul / Kadıköy"
+            },
+            "capacity": {
+              "type": "integer",
+              "example": 150
+            },
+            "price": {
+              "type": "double",
+              "example": 500.0
+            },
+            "description": {
+              "type": "string",
+              "example": "Modern ve donanımlı konferans salonu"
+            },
+            "imageUrl": {
+              "type": "string",
+              "example": "https://example.com/images/salon1.jpg"
+            },
+            "features": {
+              "type": "array",
+              "example": ["Projeksiyon", "Ses Sistemi", "Klima"]
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 400,
+              "message": "Invalid input data"
+            },
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 403,
+              "message": "Forbidden - Admin access required"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleRequest": {
+            "name": "Atatürk Konferans Salonu",
+            "location": "İstanbul / Kadıköy",
+            "capacity": 150,
+            "price": 500.0,
+            "description": "Modern ve donanımlı konferans salonu",
+            "imageUrl": "https://example.com/images/salon1.jpg",
+            "features": ["Projeksiyon", "Ses Sistemi", "Klima"]
+          },
+          "exampleResponse": {
+            "id": 1,
+            "name": "Atatürk Konferans Salonu",
+            "location": "İstanbul / Kadıköy",
+            "capacity": 150,
+            "price": 500.0,
+            "description": "Modern ve donanımlı konferans salonu",
+            "imageUrl": "https://example.com/images/salon1.jpg",
+            "features": ["Projeksiyon", "Ses Sistemi", "Klima"]
+          }
+        },
+        {
+          "name": "UpdateSalon",
+          "description": "Updates an existing salon (Admin only)",
+          "method": "PUT",
+          "url": "/api/salons/{id}",
+          "requestHeaders": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer <admin_token>"
+          },
+          "pathParameters": {
+            "id": {
+              "type": "long",
+              "required": true,
+              "example": 1
+            }
+          },
+          "requestBody": {
+            "name": {
+              "type": "string",
+              "required": true,
+              "example": "Atatürk Konferans Salonu"
+            },
+            "location": {
+              "type": "string",
+              "required": true,
+              "example": "İstanbul / Kadıköy"
+            },
+            "capacity": {
+              "type": "integer",
+              "required": true,
+              "example": 150
+            },
+            "price": {
+              "type": "double",
+              "required": true,
+              "example": 500.0
+            },
+            "description": {
+              "type": "string",
+              "required": false,
+              "example": "Modern ve donanımlı konferans salonu"
+            },
+            "imageUrl": {
+              "type": "string",
+              "required": false,
+              "example": "https://example.com/images/salon1.jpg"
+            },
+            "features": {
+              "type": "array",
+              "items": "string",
+              "required": false,
+              "example": ["Projeksiyon", "Ses Sistemi", "Klima"]
+            }
+          },
+          "responseBody": {
+            "id": {
+              "type": "long",
+              "example": 1
+            },
+            "name": {
+              "type": "string",
+              "example": "Atatürk Konferans Salonu"
+            },
+            "location": {
+              "type": "string",
+              "example": "İstanbul / Kadıköy"
+            },
+            "capacity": {
+              "type": "integer",
+              "example": 150
+            },
+            "price": {
+              "type": "double",
+              "example": 500.0
+            },
+            "description": {
+              "type": "string",
+              "example": "Modern ve donanımlı konferans salonu"
+            },
+            "imageUrl": {
+              "type": "string",
+              "example": "https://example.com/images/salon1.jpg"
+            },
+            "features": {
+              "type": "array",
+              "example": ["Projeksiyon", "Ses Sistemi", "Klima"]
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 400,
+              "message": "Invalid input data"
+            },
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 403,
+              "message": "Forbidden - Admin access required"
+            },
+            {
+              "code": 404,
+              "message": "Salon not found"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleRequest": {
+            "name": "Atatürk Konferans Salonu",
+            "location": "İstanbul / Kadıköy",
+            "capacity": 200,
+            "price": 600.0,
+            "description": "Yenilenmiş modern konferans salonu",
+            "imageUrl": "https://example.com/images/salon1.jpg",
+            "features": ["Projeksiyon", "Ses Sistemi", "Klima", "Sahne"]
+          },
+          "exampleResponse": {
+            "id": 1,
+            "name": "Atatürk Konferans Salonu",
+            "location": "İstanbul / Kadıköy",
+            "capacity": 200,
+            "price": 600.0,
+            "description": "Yenilenmiş modern konferans salonu",
+            "imageUrl": "https://example.com/images/salon1.jpg",
+            "features": ["Projeksiyon", "Ses Sistemi", "Klima", "Sahne"]
+          }
+        },
+        {
+          "name": "DeleteSalon",
+          "description": "Deletes a salon by ID (Admin only)",
+          "method": "DELETE",
+          "url": "/api/salons/{id}",
+          "requestHeaders": {
+            "Authorization": "Bearer <admin_token>"
+          },
+          "pathParameters": {
+            "id": {
+              "type": "long",
+              "required": true,
+              "example": 1
+            }
+          },
+          "requestBody": null,
+          "responseBody": null,
+          "errorResponses": [
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 403,
+              "message": "Forbidden - Admin access required"
+            },
+            {
+              "code": 404,
+              "message": "Salon not found"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Reservations",
+      "endpoints": [
+        {
+          "name": "CreateReservation",
+          "description": "Creates a new reservation for authenticated user",
+          "method": "POST",
+          "url": "/api/reservations",
+          "requestHeaders": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer <token>"
+          },
+          "requestBody": {
+            "salonId": {
+              "type": "long",
+              "required": true,
+              "example": 1,
+              "description": "ID of the salon to reserve"
+            },
+            "date": {
+              "type": "string",
+              "required": true,
+              "example": "2025-11-25",
+              "description": "Reservation date in YYYY-MM-DD format",
+              "validation": "Must be a valid date, cannot be in the past"
+            },
+            "startTime": {
+              "type": "string",
+              "required": true,
+              "example": "09:00",
+              "description": "Start time in HH:mm format",
+              "validation": "Must be valid time format"
+            },
+            "endTime": {
+              "type": "string",
+              "required": true,
+              "example": "12:00",
+              "description": "End time in HH:mm format",
+              "validation": "Must be after startTime"
+            },
+            "participants": {
+              "type": "integer",
+              "required": true,
+              "example": 50,
+              "description": "Number of participants",
+              "validation": "Must be > 0 and <= salon capacity"
+            },
+            "purpose": {
+              "type": "string",
+              "required": false,
+              "example": "Corporate meeting",
+              "description": "Purpose of the reservation"
+            },
+            "totalAmount": {
+              "type": "double",
+              "required": false,
+              "example": 1500.0,
+              "description": "Total amount for the reservation"
+            },
+            "duration": {
+              "type": "double",
+              "required": false,
+              "example": 3.0,
+              "description": "Duration in hours"
+            }
+          },
+          "responseBody": {
+            "id": {
+              "type": "long",
+              "example": 1
+            },
+            "reservationId": {
+              "type": "long",
+              "example": 1,
+              "description": "Alias for id, used for payment redirect"
+            },
+            "salon": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "long",
+                  "example": 1
+                },
+                "name": {
+                  "type": "string",
+                  "example": "Atatürk Konferans Salonu"
+                }
+              }
+            },
+            "user": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "long",
+                  "example": 1
+                },
+                "name": {
+                  "type": "string",
+                  "example": "Ahmet Yılmaz"
+                },
+                "email": {
+                  "type": "string",
+                  "example": "user@example.com"
+                }
+              }
+            },
+            "date": {
+              "type": "string",
+              "example": "2025-11-25"
+            },
+            "startTime": {
+              "type": "string",
+              "example": "09:00"
+            },
+            "endTime": {
+              "type": "string",
+              "example": "12:00"
+            },
+            "participants": {
+              "type": "integer",
+              "example": 50
+            },
+            "purpose": {
+              "type": "string",
+              "example": "Corporate meeting"
+            },
+            "status": {
+              "type": "string",
+              "example": "PENDING",
+              "description": "PENDING, APPROVED, REJECTED, CANCELLED"
+            },
+            "totalAmount": {
+              "type": "double",
+              "example": 1500.0
+            },
+            "createdAt": {
+              "type": "string",
+              "example": "2025-11-19T10:30:00"
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 400,
+              "message": "Invalid input data / Salon not available for selected time"
+            },
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 404,
+              "message": "Salon not found"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleRequest": {
+            "salonId": 1,
+            "date": "2025-11-25",
+            "startTime": "09:00",
+            "endTime": "12:00",
+            "participants": 50,
+            "purpose": "Corporate meeting",
+            "totalAmount": 1500.0,
+            "duration": 3.0
+          },
+          "exampleResponse": {
+            "id": 1,
+            "reservationId": 1,
+            "salon": {
+              "id": 1,
+              "name": "Atatürk Konferans Salonu"
+            },
+            "user": {
+              "id": 1,
+              "name": "Ahmet Yılmaz",
+              "email": "user@example.com"
+            },
+            "date": "2025-11-25",
+            "startTime": "09:00",
+            "endTime": "12:00",
+            "participants": 50,
+            "purpose": "Corporate meeting",
+            "status": "PENDING",
+            "totalAmount": 1500.0,
+            "createdAt": "2025-11-19T10:30:00"
+          }
+        },
+        {
+          "name": "GetMyReservations",
+          "description": "Returns all reservations for the authenticated user",
+          "method": "GET",
+          "url": "/api/reservations/my-reservations",
+          "requestHeaders": {
+            "Authorization": "Bearer <token>"
+          },
+          "requestBody": null,
+          "responseBody": {
+            "type": "array",
+            "items": {
+              "id": {
+                "type": "long",
+                "example": 1
+              },
+              "salon": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "long",
+                    "example": 1
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "Atatürk Konferans Salonu"
+                  },
+                  "imageUrl": {
+                    "type": "string",
+                    "example": "https://example.com/images/salon1.jpg"
+                  }
+                }
+              },
+              "date": {
+                "type": "string",
+                "example": "2025-11-25"
+              },
+              "startTime": {
+                "type": "string",
+                "example": "09:00"
+              },
+              "endTime": {
+                "type": "string",
+                "example": "12:00"
+              },
+              "participants": {
+                "type": "integer",
+                "example": 50
+              },
+              "purpose": {
+                "type": "string",
+                "example": "Corporate meeting"
+              },
+              "status": {
+                "type": "string",
+                "example": "PENDING"
+              },
+              "totalAmount": {
+                "type": "double",
+                "example": 1500.0
+              },
+              "createdAt": {
+                "type": "string",
+                "example": "2025-11-19T10:30:00"
+              }
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleResponse": [
+            {
+              "id": 1,
+              "salon": {
+                "id": 1,
+                "name": "Atatürk Konferans Salonu",
+                "imageUrl": "https://example.com/images/salon1.jpg"
+              },
+              "date": "2025-11-25",
+              "startTime": "09:00",
+              "endTime": "12:00",
+              "participants": 50,
+              "purpose": "Corporate meeting",
+              "status": "PENDING",
+              "totalAmount": 1500.0,
+              "createdAt": "2025-11-19T10:30:00"
+            }
+          ]
+        },
+        {
+          "name": "GetReservationById",
+          "description": "Returns detailed information about a specific reservation",
+          "method": "GET",
+          "url": "/api/reservations/{id}",
+          "requestHeaders": {
+            "Authorization": "Bearer <token>"
+          },
+          "pathParameters": {
+            "id": {
+              "type": "long",
+              "required": true,
+              "example": 1
+            }
+          },
+          "requestBody": null,
+          "responseBody": {
+            "id": {
+              "type": "long",
+              "example": 1
+            },
+            "salon": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "long",
+                  "example": 1
+                },
+                "name": {
+                  "type": "string",
+                  "example": "Atatürk Konferans Salonu"
+                },
+                "imageUrl": {
+                  "type": "string",
+                  "example": "https://example.com/images/salon1.jpg"
+                }
+              }
+            },
+            "user": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "long",
+                  "example": 1
+                },
+                "name": {
+                  "type": "string",
+                  "example": "Ahmet Yılmaz"
+                },
+                "email": {
+                  "type": "string",
+                  "example": "user@example.com"
+                }
+              }
+            },
+            "date": {
+              "type": "string",
+              "example": "2025-11-25"
+            },
+            "startTime": {
+              "type": "string",
+              "example": "09:00"
+            },
+            "endTime": {
+              "type": "string",
+              "example": "12:00"
+            },
+            "participants": {
+              "type": "integer",
+              "example": 50
+            },
+            "purpose": {
+              "type": "string",
+              "example": "Corporate meeting"
+            },
+            "status": {
+              "type": "string",
+              "example": "PENDING"
+            },
+            "totalAmount": {
+              "type": "double",
+              "example": 1500.0
+            },
+            "createdAt": {
+              "type": "string",
+              "example": "2025-11-19T10:30:00"
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 403,
+              "message": "Forbidden - Not your reservation"
+            },
+            {
+              "code": 404,
+              "message": "Reservation not found"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleResponse": {
+            "id": 1,
+            "salon": {
+              "id": 1,
+              "name": "Atatürk Konferans Salonu",
+              "imageUrl": "https://example.com/images/salon1.jpg"
+            },
+            "user": {
+              "id": 1,
+              "name": "Ahmet Yılmaz",
+              "email": "user@example.com"
+            },
+            "date": "2025-11-25",
+            "startTime": "09:00",
+            "endTime": "12:00",
+            "participants": 50,
+            "purpose": "Corporate meeting",
+            "status": "PENDING",
+            "totalAmount": 1500.0,
+            "createdAt": "2025-11-19T10:30:00"
+          }
+        },
+        {
+          "name": "CancelReservation",
+          "description": "Cancels a reservation (user can cancel their own, admin can cancel any)",
+          "method": "PUT",
+          "url": "/api/reservations/{id}/cancel",
+          "requestHeaders": {
+            "Authorization": "Bearer <token>"
+          },
+          "pathParameters": {
+            "id": {
+              "type": "long",
+              "required": true,
+              "example": 1
+            }
+          },
+          "requestBody": null,
+          "responseBody": {
+            "message": {
+              "type": "string",
+              "example": "Reservation cancelled successfully"
+            },
+            "refundAmount": {
+              "type": "double",
+              "example": 0
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 400,
+              "message": "Cannot cancel already cancelled/rejected reservation"
+            },
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 403,
+              "message": "Forbidden - Not your reservation"
+            },
+            {
+              "code": 404,
+              "message": "Reservation not found"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleResponse": {
+            "message": "Reservation cancelled successfully",
+            "refundAmount": 0
+          }
+        },
+        {
+          "name": "GetAllReservations",
+          "description": "Returns all reservations with optional filters (Admin only)",
+          "method": "GET",
+          "url": "/api/reservations",
+          "requestHeaders": {
+            "Authorization": "Bearer <admin_token>"
+          },
+          "queryParameters": {
+            "status": {
+              "type": "string",
+              "required": false,
+              "description": "Filter by status (PENDING, APPROVED, REJECTED, CANCELLED)",
+              "example": "PENDING"
+            },
+            "date": {
+              "type": "string",
+              "required": false,
+              "description": "Filter by date in YYYY-MM-DD format",
+              "example": "2025-11-25"
+            },
+            "salonId": {
+              "type": "long",
+              "required": false,
+              "description": "Filter by salon ID",
+              "example": 1
+            }
+          },
+          "requestBody": null,
+          "responseBody": {
+            "type": "array",
+            "items": {
+              "id": {
+                "type": "long",
+                "example": 1
+              },
+              "salon": {
+                "type": "object"
+              },
+              "user": {
+                "type": "object"
+              },
+              "date": {
+                "type": "string",
+                "example": "2025-11-25"
+              },
+              "startTime": {
+                "type": "string",
+                "example": "09:00"
+              },
+              "endTime": {
+                "type": "string",
+                "example": "12:00"
+              },
+              "participants": {
+                "type": "integer",
+                "example": 50
+              },
+              "status": {
+                "type": "string",
+                "example": "PENDING"
+              },
+              "totalAmount": {
+                "type": "double",
+                "example": 1500.0
+              }
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 403,
+              "message": "Forbidden - Admin access required"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleResponse": [
+            {
+              "id": 1,
+              "salon": {
+                "id": 1,
+                "name": "Atatürk Konferans Salonu"
+              },
+              "user": {
+                "id": 1,
+                "name": "Ahmet Yılmaz",
+                "email": "user@example.com"
+              },
+              "date": "2025-11-25",
+              "startTime": "09:00",
+              "endTime": "12:00",
+              "participants": 50,
+              "status": "PENDING",
+              "totalAmount": 1500.0
+            }
+          ]
+        },
+        {
+          "name": "UpdateReservationStatus",
+          "description": "Updates the status of a reservation (Admin only)",
+          "method": "PUT",
+          "url": "/api/reservations/{id}/status",
+          "requestHeaders": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer <admin_token>"
+          },
+          "pathParameters": {
+            "id": {
+              "type": "long",
+              "required": true,
+              "example": 1
+            }
+          },
+          "requestBody": {
+            "status": {
+              "type": "string",
+              "required": true,
+              "description": "New status: APPROVED, REJECTED, CANCELLED",
+              "example": "APPROVED",
+              "validation": "Must be valid status value"
+            }
+          },
+          "responseBody": {
+            "id": {
+              "type": "long",
+              "example": 1
+            },
+            "status": {
+              "type": "string",
+              "example": "APPROVED"
+            },
+            "message": {
+              "type": "string",
+              "example": "Reservation status updated successfully"
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 400,
+              "message": "Invalid status value"
+            },
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 403,
+              "message": "Forbidden - Admin access required"
+            },
+            {
+              "code": 404,
+              "message": "Reservation not found"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleRequest": {
+            "status": "APPROVED"
+          },
+          "exampleResponse": {
+            "id": 1,
+            "status": "APPROVED",
+            "message": "Reservation status updated successfully"
+          }
+        },
+        {
+          "name": "ApproveReservation",
+          "description": "Approves a pending reservation (Admin only)",
+          "method": "PUT",
+          "url": "/api/reservations/{id}/approve",
+          "requestHeaders": {
+            "Authorization": "Bearer <admin_token>"
+          },
+          "pathParameters": {
+            "id": {
+              "type": "long",
+              "required": true,
+              "example": 1
+            }
+          },
+          "requestBody": null,
+          "responseBody": {
+            "id": {
+              "type": "long",
+              "example": 1
+            },
+            "status": {
+              "type": "string",
+              "example": "APPROVED"
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 403,
+              "message": "Forbidden - Admin access required"
+            },
+            {
+              "code": 404,
+              "message": "Reservation not found"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleResponse": {
+            "id": 1,
+            "status": "APPROVED"
+          }
+        },
+        {
+          "name": "RejectReservation",
+          "description": "Rejects a pending reservation (Admin only)",
+          "method": "PUT",
+          "url": "/api/reservations/{id}/reject",
+          "requestHeaders": {
+            "Authorization": "Bearer <admin_token>"
+          },
+          "pathParameters": {
+            "id": {
+              "type": "long",
+              "required": true,
+              "example": 1
+            }
+          },
+          "requestBody": null,
+          "responseBody": {
+            "id": {
+              "type": "long",
+              "example": 1
+            },
+            "status": {
+              "type": "string",
+              "example": "REJECTED"
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 403,
+              "message": "Forbidden - Admin access required"
+            },
+            {
+              "code": 404,
+              "message": "Reservation not found"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleResponse": {
+            "id": 1,
+            "status": "REJECTED"
+          }
+        },
+        {
+          "name": "GetPendingReservations",
+          "description": "Returns all pending reservations (Admin only)",
+          "method": "GET",
+          "url": "/api/reservations/pending",
+          "requestHeaders": {
+            "Authorization": "Bearer <admin_token>"
+          },
+          "requestBody": null,
+          "responseBody": {
+            "type": "array",
+            "description": "List of pending reservations"
+          },
+          "errorResponses": [
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 403,
+              "message": "Forbidden - Admin access required"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ]
+        },
+        {
+          "name": "GetUpcomingReservations",
+          "description": "Returns reservations in the next 24 hours (Admin only)",
+          "method": "GET",
+          "url": "/api/reservations/upcoming",
+          "requestHeaders": {
+            "Authorization": "Bearer <admin_token>"
+          },
+          "requestBody": null,
+          "responseBody": {
+            "type": "array",
+            "description": "List of upcoming reservations within 24 hours"
+          },
+          "errorResponses": [
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 403,
+              "message": "Forbidden - Admin access required"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ]
+        },
+        {
+          "name": "GetCalendarReservations",
+          "description": "Returns approved reservations for calendar display",
+          "method": "GET",
+          "url": "/api/reservations/calendar",
+          "requestHeaders": {
+            "Authorization": "Bearer <token>"
+          },
+          "requestBody": null,
+          "responseBody": {
+            "type": "array",
+            "items": {
+              "id": {
+                "type": "long",
+                "example": 1
+              },
+              "salon": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "long",
+                    "example": 1
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "Atatürk Konferans Salonu"
+                  }
+                }
+              },
+              "date": {
+                "type": "string",
+                "example": "2025-11-25"
+              },
+              "startTime": {
+                "type": "string",
+                "example": "09:00"
+              },
+              "endTime": {
+                "type": "string",
+                "example": "12:00"
+              }
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleResponse": [
+            {
+              "id": 1,
+              "salon": {
+                "id": 1,
+                "name": "Atatürk Konferans Salonu"
+              },
+              "date": "2025-11-25",
+              "startTime": "09:00",
+              "endTime": "12:00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Payments",
+      "endpoints": [
+        {
+          "name": "ProcessPayment",
+          "description": "Processes payment for a reservation",
+          "method": "POST",
+          "url": "/api/payments/process",
+          "requestHeaders": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer <token>"
+          },
+          "requestBody": {
+            "reservationId": {
+              "type": "long",
+              "required": true,
+              "example": 1,
+              "description": "ID of the reservation to pay for"
+            },
+            "paymentMethod": {
+              "type": "string",
+              "required": true,
+              "example": "credit_card",
+              "description": "Payment method: credit_card or bank_transfer",
+              "validation": "Must be valid payment method"
+            },
+            "cardDetails": {
+              "type": "object",
+              "required": true,
+              "properties": {
+                "cardNumber": {
+                  "type": "string",
+                  "required": true,
+                  "example": "1234567890123456",
+                  "validation": "Must be 16 digits",
+                  "note": "Should be tokenized in production"
+                },
+                "cardHolder": {
+                  "type": "string",
+                  "required": true,
+                  "example": "AHMET YILMAZ"
+                },
+                "expiryMonth": {
+                  "type": "string",
+                  "required": true,
+                  "example": "12",
+                  "validation": "01-12"
+                },
+                "expiryYear": {
+                  "type": "string",
+                  "required": true,
+                  "example": "2027",
+                  "validation": "Must be current year or future"
+                },
+                "cvv": {
+                  "type": "string",
+                  "required": true,
+                  "example": "123",
+                  "validation": "3 digits"
+                }
+              }
+            }
+          },
+          "responseBody": {
+            "id": {
+              "type": "long",
+              "example": 1,
+              "description": "Payment ID"
+            },
+            "reservationId": {
+              "type": "long",
+              "example": 1
+            },
+            "amount": {
+              "type": "double",
+              "example": 1500.0
+            },
+            "status": {
+              "type": "string",
+              "example": "COMPLETED",
+              "description": "PENDING, COMPLETED, FAILED, REFUNDED"
+            },
+            "transactionId": {
+              "type": "string",
+              "example": "TXN123456789",
+              "description": "Payment gateway transaction ID"
+            },
+            "paymentMethod": {
+              "type": "string",
+              "example": "credit_card"
+            },
+            "createdAt": {
+              "type": "string",
+              "example": "2025-11-19T10:35:00"
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 400,
+              "message": "Invalid payment data / Payment already completed"
+            },
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 404,
+              "message": "Reservation not found"
+            },
+            {
+              "code": 500,
+              "message": "Payment processing failed"
+            }
+          ],
+          "exampleRequest": {
+            "reservationId": 1,
+            "paymentMethod": "credit_card",
+            "cardDetails": {
+              "cardNumber": "1234567890123456",
+              "cardHolder": "AHMET YILMAZ",
+              "expiryMonth": "12",
+              "expiryYear": "2027",
+              "cvv": "123"
+            }
+          },
+          "exampleResponse": {
+            "id": 1,
+            "reservationId": 1,
+            "amount": 1500.0,
+            "status": "COMPLETED",
+            "transactionId": "TXN123456789",
+            "paymentMethod": "credit_card",
+            "createdAt": "2025-11-19T10:35:00"
+          }
+        },
+        {
+          "name": "GetPaymentByReservation",
+          "description": "Returns payment information for a specific reservation",
+          "method": "GET",
+          "url": "/api/payments/{reservationId}",
+          "requestHeaders": {
+            "Authorization": "Bearer <token>"
+          },
+          "pathParameters": {
+            "reservationId": {
+              "type": "long",
+              "required": true,
+              "example": 1
+            }
+          },
+          "requestBody": null,
+          "responseBody": {
+            "id": {
+              "type": "long",
+              "example": 1
+            },
+            "reservationId": {
+              "type": "long",
+              "example": 1
+            },
+            "amount": {
+              "type": "double",
+              "example": 1500.0
+            },
+            "status": {
+              "type": "string",
+              "example": "COMPLETED"
+            },
+            "transactionId": {
+              "type": "string",
+              "example": "TXN123456789"
+            },
+            "paymentMethod": {
+              "type": "string",
+              "example": "credit_card"
+            },
+            "createdAt": {
+              "type": "string",
+              "example": "2025-11-19T10:35:00"
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 403,
+              "message": "Forbidden - Not your payment"
+            },
+            {
+              "code": 404,
+              "message": "Payment not found"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleResponse": {
+            "id": 1,
+            "reservationId": 1,
+            "amount": 1500.0,
+            "status": "COMPLETED",
+            "transactionId": "TXN123456789",
+            "paymentMethod": "credit_card",
+            "createdAt": "2025-11-19T10:35:00"
+          }
+        },
+        {
+          "name": "GetMyPayments",
+          "description": "Returns all payments made by the authenticated user",
+          "method": "GET",
+          "url": "/api/payments/my-payments",
+          "requestHeaders": {
+            "Authorization": "Bearer <token>"
+          },
+          "requestBody": null,
+          "responseBody": {
+            "type": "array",
+            "items": {
+              "id": {
+                "type": "long",
+                "example": 1
+              },
+              "reservationId": {
+                "type": "long",
+                "example": 1
+              },
+              "amount": {
+                "type": "double",
+                "example": 1500.0
+              },
+              "status": {
+                "type": "string",
+                "example": "COMPLETED"
+              },
+              "transactionId": {
+                "type": "string",
+                "example": "TXN123456789"
+              },
+              "paymentMethod": {
+                "type": "string",
+                "example": "credit_card"
+              },
+              "createdAt": {
+                "type": "string",
+                "example": "2025-11-19T10:35:00"
+              }
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleResponse": [
+            {
+              "id": 1,
+              "reservationId": 1,
+              "amount": 1500.0,
+              "status": "COMPLETED",
+              "transactionId": "TXN123456789",
+              "paymentMethod": "credit_card",
+              "createdAt": "2025-11-19T10:35:00"
+            }
+          ]
+        },
+        {
+          "name": "RefundPayment",
+          "description": "Processes a refund for a payment (Admin only)",
+          "method": "POST",
+          "url": "/api/payments/{paymentId}/refund",
+          "requestHeaders": {
+            "Authorization": "Bearer <admin_token>"
+          },
+          "pathParameters": {
+            "paymentId": {
+              "type": "long",
+              "required": true,
+              "example": 1
+            }
+          },
+          "requestBody": null,
+          "responseBody": {
+            "id": {
+              "type": "long",
+              "example": 1
+            },
+            "status": {
+              "type": "string",
+              "example": "REFUNDED"
+            },
+            "message": {
+              "type": "string",
+              "example": "Refund processed successfully"
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 400,
+              "message": "Payment cannot be refunded / Already refunded"
+            },
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 403,
+              "message": "Forbidden - Admin access required"
+            },
+            {
+              "code": 404,
+              "message": "Payment not found"
+            },
+            {
+              "code": 500,
+              "message": "Refund processing failed"
+            }
+          ],
+          "exampleResponse": {
+            "id": 1,
+            "status": "REFUNDED",
+            "message": "Refund processed successfully"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Profile",
+      "description": "Profile management endpoints for user personal information, address, and saved cards - FULLY IMPLEMENTED",
+      "endpoints": [
+        {
+          "name": "GetProfile",
+          "description": "Returns full user profile including personal info, address, and saved card information",
+          "method": "GET",
+          "url": "/api/profile",
+          "requestHeaders": {
+            "Authorization": "Bearer <token>"
+          },
+          "requestBody": null,
+          "responseBody": {
+            "id": {
+              "type": "long",
+              "example": 1
+            },
+            "name": {
+              "type": "string",
+              "example": "Ahmet Yılmaz",
+              "description": "User's full name"
+            },
+            "email": {
+              "type": "string",
+              "example": "user@example.com",
+              "description": "User's email address"
+            },
+            "phone": {
+              "type": "string",
+              "example": "05551234567",
+              "description": "User's phone number"
+            },
+            "role": {
+              "type": "string",
+              "example": "user",
+              "description": "User's role (user or admin)"
+            },
+            "address": {
+              "type": "object",
+              "nullable": true,
+              "properties": {
+                "street": {
+                  "type": "string",
+                  "example": "Örnek Sokak No: 123",
+                  "description": "Street name and building number"
+                },
+                "city": {
+                  "type": "string",
+                  "example": "İstanbul",
+                  "description": "City name"
+                },
+                "state": {
+                  "type": "string",
+                  "example": "Kadıköy",
+                  "description": "State/District/İlçe"
+                },
+                "zipCode": {
+                  "type": "string",
+                  "example": "34000",
+                  "description": "Postal/ZIP code"
+                },
+                "country": {
+                  "type": "string",
+                  "example": "Türkiye",
+                  "description": "Country name"
+                }
+              }
+            },
+            "card": {
+              "type": "object",
+              "nullable": true,
+              "description": "Saved card information (masked for security)",
+              "properties": {
+                "cardNumber": {
+                  "type": "string",
+                  "example": "**** **** **** 1234",
+                  "description": "Masked card number (only last 4 digits visible)"
+                },
+                "cardHolder": {
+                  "type": "string",
+                  "example": "AHMET YILMAZ",
+                  "description": "Name on card"
+                },
+                "expiryMonth": {
+                  "type": "string",
+                  "example": "12",
+                  "description": "Card expiry month"
+                },
+                "expiryYear": {
+                  "type": "string",
+                  "example": "2027",
+                  "description": "Card expiry year"
+                }
+              },
+              "note": "CVV is NEVER stored or returned for security reasons"
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 404,
+              "message": "Profile not found"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleResponse": {
+            "id": 1,
+            "name": "Ahmet Yılmaz",
+            "email": "user@example.com",
+            "phone": "05551234567",
+            "role": "user",
+            "address": {
+              "street": "Örnek Sokak No: 123",
+              "city": "İstanbul",
+              "state": "Kadıköy",
+              "zipCode": "34000",
+              "country": "Türkiye"
+            },
+            "card": {
+              "cardNumber": "**** **** **** 1234",
+              "cardHolder": "AHMET YILMAZ",
+              "expiryMonth": "12",
+              "expiryYear": "2027"
+            }
+          }
+        },
+        {
+          "name": "UpdateProfile",
+          "description": "Updates user profile information (name, email, phone, address, card)",
+          "method": "PUT",
+          "url": "/api/profile",
+          "requestHeaders": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer <token>"
+          },
+          "requestBody": {
+            "name": {
+              "type": "string",
+              "required": false,
+              "example": "Ahmet Yılmaz",
+              "validation": "Minimum 3 characters if provided"
+            },
+            "email": {
+              "type": "string",
+              "required": false,
+              "example": "user@example.com",
+              "validation": "Must be valid email format if provided, must be unique"
+            },
+            "phone": {
+              "type": "string",
+              "required": false,
+              "example": "05551234567",
+              "validation": "Must be 10-11 digits if provided"
+            },
+            "address": {
+              "type": "object",
+              "required": false,
+              "description": "Address information - all fields are optional",
+              "properties": {
+                "street": {
+                  "type": "string",
+                  "required": false,
+                  "example": "Örnek Sokak No: 123"
+                },
+                "city": {
+                  "type": "string",
+                  "required": false,
+                  "example": "İstanbul"
+                },
+                "state": {
+                  "type": "string",
+                  "required": false,
+                  "example": "Kadıköy"
+                },
+                "zipCode": {
+                  "type": "string",
+                  "required": false,
+                  "example": "34000"
+                },
+                "country": {
+                  "type": "string",
+                  "required": false,
+                  "example": "Türkiye"
+                }
+              }
+            },
+            "card": {
+              "type": "object",
+              "required": false,
+              "description": "Card information to save - IMPORTANT: In production, card data should be tokenized via payment gateway first",
+              "properties": {
+                "cardNumber": {
+                  "type": "string",
+                  "required": true,
+                  "example": "1234567890123456",
+                  "validation": "Must be 16 digits"
+                },
+                "cardHolder": {
+                  "type": "string",
+                  "required": true,
+                  "example": "AHMET YILMAZ",
+                  "validation": "Required if saving card"
+                },
+                "expiryMonth": {
+                  "type": "string",
+                  "required": true,
+                  "example": "12",
+                  "validation": "01-12"
+                },
+                "expiryYear": {
+                  "type": "string",
+                  "required": true,
+                  "example": "2027",
+                  "validation": "Current year or future"
+                }
+              },
+              "note": "CVV should NEVER be stored. For production: use payment gateway tokenization"
+            }
+          },
+          "responseBody": {
+            "message": {
+              "type": "string",
+              "example": "Profile updated successfully"
+            },
+            "user": {
+              "type": "object",
+              "description": "Updated user profile",
+              "properties": {
+                "id": {
+                  "type": "long",
+                  "example": 1
+                },
+                "name": {
+                  "type": "string",
+                  "example": "Ahmet Yılmaz"
+                },
+                "email": {
+                  "type": "string",
+                  "example": "user@example.com"
+                },
+                "phone": {
+                  "type": "string",
+                  "example": "05551234567"
+                },
+                "role": {
+                  "type": "string",
+                  "example": "user"
+                },
+                "address": {
+                  "type": "object",
+                  "nullable": true
+                },
+                "card": {
+                  "type": "object",
+                  "nullable": true,
+                  "description": "Masked card information"
+                }
+              }
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 400,
+              "message": "Invalid input data / Email already exists / Invalid card information"
+            },
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleRequest": {
+            "name": "Ahmet Yılmaz",
+            "email": "user@example.com",
+            "phone": "05551234567",
+            "address": {
+              "street": "Örnek Sokak No: 123",
+              "city": "İstanbul",
+              "state": "Kadıköy",
+              "zipCode": "34000",
+              "country": "Türkiye"
+            },
+            "card": {
+              "cardNumber": "1234567890123456",
+              "cardHolder": "AHMET YILMAZ",
+              "expiryMonth": "12",
+              "expiryYear": "2027"
+            }
+          },
+          "exampleResponse": {
+            "message": "Profile updated successfully",
+            "user": {
+              "id": 1,
+              "name": "Ahmet Yılmaz",
+              "email": "user@example.com",
+              "phone": "05551234567",
+              "role": "user",
+              "address": {
+                "street": "Örnek Sokak No: 123",
+                "city": "İstanbul",
+                "state": "Kadıköy",
+                "zipCode": "34000",
+                "country": "Türkiye"
+              },
+              "card": {
+                "cardNumber": "**** **** **** 1234",
+                "cardHolder": "AHMET YILMAZ",
+                "expiryMonth": "12",
+                "expiryYear": "2027"
+              }
+            }
+          }
+        },
+        {
+          "name": "UpdatePassword",
+          "description": "Updates user password",
+          "method": "PUT",
+          "url": "/api/profile/password",
+          "requestHeaders": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer <token>"
+          },
+          "requestBody": {
+            "currentPassword": {
+              "type": "string",
+              "required": true,
+              "example": "oldpassword123",
+              "description": "User's current password for verification"
+            },
+            "newPassword": {
+              "type": "string",
+              "required": true,
+              "example": "newpassword123",
+              "validation": "Minimum 6 characters, must be different from current password"
+            }
+          },
+          "responseBody": {
+            "message": {
+              "type": "string",
+              "example": "Password updated successfully"
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 400,
+              "message": "Invalid password / New password too short / Current password incorrect"
+            },
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleRequest": {
+            "currentPassword": "oldpassword123",
+            "newPassword": "newpassword123"
+          },
+          "exampleResponse": {
+            "message": "Password updated successfully"
+          }
+        },
+        {
+          "name": "UpdateEmail",
+          "description": "Updates user email address",
+          "method": "PUT",
+          "url": "/api/profile/email",
+          "requestHeaders": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer <token>"
+          },
+          "requestBody": {
+            "email": {
+              "type": "string",
+              "required": true,
+              "example": "newemail@example.com",
+              "validation": "Must be valid email format, must be unique"
+            }
+          },
+          "responseBody": {
+            "message": {
+              "type": "string",
+              "example": "Email updated successfully"
+            },
+            "user": {
+              "type": "object",
+              "description": "Updated user info"
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 400,
+              "message": "Invalid email format / Email already exists"
+            },
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleRequest": {
+            "email": "newemail@example.com"
+          },
+          "exampleResponse": {
+            "message": "Email updated successfully",
+            "user": {
+              "id": 1,
+              "name": "Ahmet Yılmaz",
+              "email": "newemail@example.com",
+              "phone": "05551234567",
+              "role": "user"
+            }
+          }
+        },
+        {
+          "name": "UpdatePhone",
+          "description": "Updates user phone number",
+          "method": "PUT",
+          "url": "/api/profile/phone",
+          "requestHeaders": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer <token>"
+          },
+          "requestBody": {
+            "phone": {
+              "type": "string",
+              "required": true,
+              "example": "05559876543",
+              "validation": "Must be 10-11 digits"
+            }
+          },
+          "responseBody": {
+            "message": {
+              "type": "string",
+              "example": "Phone updated successfully"
+            },
+            "user": {
+              "type": "object",
+              "description": "Updated user info"
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 400,
+              "message": "Invalid phone number format"
+            },
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 500,
+              "message": "Internal server error"
+            }
+          ],
+          "exampleRequest": {
+            "phone": "05559876543"
+          },
+          "exampleResponse": {
+            "message": "Phone updated successfully",
+            "user": {
+              "id": 1,
+              "name": "Ahmet Yılmaz",
+              "email": "user@example.com",
+              "phone": "05559876543",
+              "role": "user"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "security": {
+    "authentication": {
+      "type": "JWT Bearer Token",
+      "description": "Most endpoints require JWT authentication. Include the token in the Authorization header as 'Bearer <token>'",
+      "tokenLocation": "Header",
+      "headerName": "Authorization",
+      "headerFormat": "Bearer <token>"
+    },
+    "roles": {
+      "USER": "Regular user - can create reservations, view own data, update own profile",
+      "ADMIN": "Administrator - can manage salons, approve/reject reservations, process refunds, view all data"
+    }
+  },
+  "dataModels": {
+    "User": {
+      "id": "long",
+      "name": "string",
+      "email": "string (unique)",
+      "phone": "string",
+      "password": "string (hashed)",
+      "role": "string (USER/ADMIN)"
+    },
+    "Salon": {
+      "id": "long",
+      "name": "string",
+      "location": "string",
+      "capacity": "integer",
+      "description": "string",
+      "price": "double (per hour)",
+      "imageUrl": "string",
+      "features": "array of strings"
+    },
+    "Reservation": {
+      "id": "long",
+      "salonId": "long",
+      "userId": "long",
+      "date": "string (YYYY-MM-DD)",
+      "startTime": "string (HH:mm)",
+      "endTime": "string (HH:mm)",
+      "participants": "integer",
+      "purpose": "string",
+      "status": "string (PENDING/APPROVED/REJECTED/CANCELLED)",
+      "totalAmount": "double",
+      "createdAt": "timestamp"
+    },
+    "Payment": {
+      "id": "long",
+      "reservationId": "long",
+      "userId": "long",
+      "amount": "double",
+      "status": "string (PENDING/COMPLETED/FAILED/REFUNDED)",
+      "transactionId": "string",
+      "paymentMethod": "string",
+      "createdAt": "timestamp"
+    },
+    "Profile_Address_NEW": {
+      "street": "string",
+      "city": "string",
+      "state": "string (district/ilçe)",
+      "zipCode": "string",
+      "country": "string"
+    },
+    "Profile_Card_NEW": {
+      "cardNumber": "string (masked: **** **** **** 1234)",
+      "cardHolder": "string",
+      "expiryMonth": "string",
+      "expiryYear": "string",
+      "note": "CVV is NEVER stored"
+    }
+  },
+  "validationRules": {
+    "email": "Must be valid email format (regex: ^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$)",
+    "password": "Minimum 6 characters",
+    "phone": "10-11 digits",
+    "name": "Minimum 3 characters",
+    "date": "YYYY-MM-DD format, cannot be in the past",
+    "time": "HH:mm format (24-hour)",
+    "cardNumber": "16 digits (should be tokenized in production)",
+    "cvv": "3 digits (NEVER store CVV)",
+    "expiryMonth": "01-12",
+    "expiryYear": "Current year or future",
+    "capacity": "Must be positive integer",
+    "price": "Must be positive number",
+    "participants": "Must be > 0 and <= salon capacity"
+  },
+  "notes": {
+    "frontend_requirements": [
+      "Frontend expects 'reservationId' or 'id' field in reservation creation response for payment redirect",
+      "Frontend expects token and user object in login/register responses",
+      "Frontend shows masked card numbers for security (**** **** **** 1234)",
+      "Frontend calendar component needs approved reservations with date, startTime, endTime",
+      "Frontend profile page has 4 tabs: Personal Info, Address, Card Info, Password"
+    ],
+    "security_notes": [
+      "IMPORTANT: Card information should be tokenized via payment gateway (e.g., iyzico, Stripe) before storing",
+      "CVV should NEVER be stored in database",
+      "Only last 4 digits of card number should be visible to users",
+      "Password must be hashed using BCrypt or similar",
+      "JWT tokens should have reasonable expiration time (e.g., 24 hours)"
+    ],
+    "implementation_priority": [
+      "1. Profile GET/PUT endpoints (highest priority - needed for Profile page)",
+      "2. Password update endpoint",
+      "3. Email/Phone update endpoints (optional, can use main profile update)",
+      "4. Card tokenization integration with payment gateway"
+    ]
+  }
+}
+
