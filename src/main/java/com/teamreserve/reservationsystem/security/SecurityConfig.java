@@ -1,7 +1,6 @@
 package com.teamreserve.reservationsystem.security;
 
 import com.teamreserve.reservationsystem.model.UserRole;
-import com.teamreserve.reservationsystem.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -48,11 +47,15 @@ public class SecurityConfig {
 
                     config.setAllowedOrigins(List.of(
                             "http://localhost:5173",
-                            "http://localhost:3000"
+                            "http://localhost:3000",
+                            "https://web-proje-2025-2026-reservation-system-production-1590.up.railway.app",
+                            "http://web-proje-2025-2026-reservation-system-production-1590.up.railway.app"
                     ));
 
-                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
                     config.setAllowedHeaders(List.of("*"));
+                    config.setExposedHeaders(List.of("Authorization", "Content-Type"));
+                    config.setMaxAge(3600L);
                     return config;
                 }))
                 .csrf(AbstractHttpConfigurer::disable)
