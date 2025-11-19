@@ -5,6 +5,7 @@ import com.teamreserve.reservationsystem.dto.PaymentResponseDTO;
 import com.teamreserve.reservationsystem.model.Payment;
 import com.teamreserve.reservationsystem.model.PaymentStatus;
 import com.teamreserve.reservationsystem.model.Reservation;
+import com.teamreserve.reservationsystem.model.SavedCard;
 import com.teamreserve.reservationsystem.repository.PaymentRepository;
 import com.teamreserve.reservationsystem.repository.ReservationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,9 @@ public class PaymentService {
 
     @Autowired
     private ReservationRepository reservationRepository;
+
+    @Autowired
+    private CardService cardService;
 
     private PaymentResponseDTO toDto(Payment payment) {
         return PaymentResponseDTO.builder()
@@ -73,7 +77,34 @@ public class PaymentService {
         payment.setPaymentMethod(request.getPaymentMethod());
         payment.setStatus(PaymentStatus.COMPLETED);
         payment.setTransactionId(UUID.randomUUID().toString());
-        payment.setCardLast4(extractCardLast4(request.getCardDetails()));
+
+        // Handle saved card payment
+        if (request.getSavedCardId() != null) {
+            // Payment with saved card
+            if (!StringUtils.hasText(request.getCvv())) {
+                throw new RuntimeException("CVV is required for saved card payment");
+            }
+            
+            // Validate CVV format (3 digits)
+            if (!request.getCvv().matches("^[0-9]{3}$")) {
+                throw new RuntimeException("CVV must be 3 digits");
+            }
+
+            // Get the saved card (this also verifies it belongs to the user)
+            SavedCard savedCard = cardService.getCardById(requesterEmail, request.getSavedCardId());
+            
+            // Extract last 4 digits from masked number
+            String maskedNumber = savedCard.getMaskedNumber();
+            if (maskedNumber != null && maskedNumber.length() >= 4) {
+                payment.setCardLast4(maskedNumber.substring(maskedNumber.length() - 4));
+            }
+
+            // In production: Use savedCard.getToken() + CVV to process payment via payment gateway
+            // payment.setTransactionId(paymentGateway.charge(savedCard.getToken(), request.getCvv(), amount));
+        } else {
+            // Normal payment with card details
+            payment.setCardLast4(extractCardLast4(request.getCardDetails()));
+        }
 
         return toDto(paymentRepository.save(payment));
     }

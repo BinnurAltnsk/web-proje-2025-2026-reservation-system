@@ -1600,9 +1600,24 @@
               "description": "Payment method: credit_card or bank_transfer",
               "validation": "Must be valid payment method"
             },
+            "savedCardId": {
+              "type": "long",
+              "required": false,
+              "example": 3,
+              "description": "ID of saved card to use for payment. If provided, cardDetails is not required.",
+              "note": "When using saved card, only CVV is required"
+            },
+            "cvv": {
+              "type": "string",
+              "required": false,
+              "example": "123",
+              "description": "CVV for saved card payment. Required if savedCardId is provided.",
+              "validation": "3 digits"
+            },
             "cardDetails": {
               "type": "object",
-              "required": true,
+              "required": false,
+              "description": "Card details for new card payment. Not required if savedCardId is provided.",
               "properties": {
                 "cardNumber": {
                   "type": "string",
@@ -1688,7 +1703,7 @@
               "message": "Payment processing failed"
             }
           ],
-          "exampleRequest": {
+          "exampleRequest_NewCard": {
             "reservationId": 1,
             "paymentMethod": "credit_card",
             "cardDetails": {
@@ -1698,6 +1713,12 @@
               "expiryYear": "2027",
               "cvv": "123"
             }
+          },
+          "exampleRequest_SavedCard": {
+            "reservationId": 1,
+            "paymentMethod": "credit_card",
+            "savedCardId": 3,
+            "cvv": "123"
           },
           "exampleResponse": {
             "id": 1,
@@ -2390,6 +2411,280 @@
               "role": "user"
             }
           }
+        },
+        {
+          "name": "GetSavedCards",
+          "description": "Returns all saved cards for the authenticated user with masked card numbers",
+          "method": "GET",
+          "url": "/api/profile/cards",
+          "requestHeaders": {
+            "Authorization": "Bearer <token>"
+          },
+          "requestBody": null,
+          "responseBody": {
+            "type": "array",
+            "items": {
+              "id": {
+                "type": "long",
+                "example": 1
+              },
+              "cardNumber": {
+                "type": "string",
+                "example": "**** **** **** 1234",
+                "description": "Masked card number showing only last 4 digits"
+              },
+              "cardHolder": {
+                "type": "string",
+                "example": "AHMET YILMAZ"
+              },
+              "expiryMonth": {
+                "type": "string",
+                "example": "12"
+              },
+              "expiryYear": {
+                "type": "string",
+                "example": "2027"
+              },
+              "isDefault": {
+                "type": "boolean",
+                "example": true,
+                "description": "True if this is the default card"
+              }
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 404,
+              "message": "User not found"
+            }
+          ],
+          "exampleResponse": [
+            {
+              "id": 1,
+              "cardNumber": "**** **** **** 1234",
+              "cardHolder": "AHMET YILMAZ",
+              "expiryMonth": "12",
+              "expiryYear": "2027",
+              "isDefault": true
+            },
+            {
+              "id": 2,
+              "cardNumber": "**** **** **** 5678",
+              "cardHolder": "AHMET YILMAZ",
+              "expiryMonth": "06",
+              "expiryYear": "2028",
+              "isDefault": false
+            }
+          ]
+        },
+        {
+          "name": "AddSavedCard",
+          "description": "Adds a new card to user's saved cards. CVV is validated but never stored. First card becomes default automatically.",
+          "method": "POST",
+          "url": "/api/profile/cards",
+          "requestHeaders": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer <token>"
+          },
+          "requestBody": {
+            "cardNumber": {
+              "type": "string",
+              "required": true,
+              "example": "1234567812345678",
+              "validation": "Must be exactly 16 digits",
+              "note": "Full number is used only to generate masked version and token, then discarded"
+            },
+            "cardHolder": {
+              "type": "string",
+              "required": true,
+              "example": "AHMET YILMAZ",
+              "validation": "Required"
+            },
+            "expiryMonth": {
+              "type": "string",
+              "required": true,
+              "example": "12",
+              "validation": "Must be 01-12"
+            },
+            "expiryYear": {
+              "type": "string",
+              "required": true,
+              "example": "2027",
+              "validation": "Must be current year or future"
+            },
+            "cvv": {
+              "type": "string",
+              "required": true,
+              "example": "123",
+              "validation": "Must be 3 digits",
+              "note": "NEVER stored - only validated during card addition"
+            }
+          },
+          "responseBody": {
+            "id": {
+              "type": "long",
+              "example": 1
+            },
+            "cardNumber": {
+              "type": "string",
+              "example": "**** **** **** 5678",
+              "description": "Masked card number"
+            },
+            "cardHolder": {
+              "type": "string",
+              "example": "AHMET YILMAZ"
+            },
+            "expiryMonth": {
+              "type": "string",
+              "example": "12"
+            },
+            "expiryYear": {
+              "type": "string",
+              "example": "2027"
+            },
+            "isDefault": {
+              "type": "boolean",
+              "example": true,
+              "description": "True if first card, false otherwise"
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 400,
+              "message": "Invalid card number / Invalid CVV / Card expired / Invalid expiry date"
+            },
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            }
+          ],
+          "exampleRequest": {
+            "cardNumber": "1234567812345678",
+            "cardHolder": "AHMET YILMAZ",
+            "expiryMonth": "12",
+            "expiryYear": "2027",
+            "cvv": "123"
+          },
+          "exampleResponse": {
+            "id": 1,
+            "cardNumber": "**** **** **** 5678",
+            "cardHolder": "AHMET YILMAZ",
+            "expiryMonth": "12",
+            "expiryYear": "2027",
+            "isDefault": true
+          }
+        },
+        {
+          "name": "DeleteSavedCard",
+          "description": "Deletes a saved card. If default card is deleted, another card becomes default automatically.",
+          "method": "DELETE",
+          "url": "/api/profile/cards/{id}",
+          "requestHeaders": {
+            "Authorization": "Bearer <token>"
+          },
+          "pathParameters": {
+            "id": {
+              "type": "long",
+              "required": true,
+              "description": "Card ID to delete",
+              "example": 1
+            }
+          },
+          "requestBody": null,
+          "responseBody": {
+            "message": {
+              "type": "string",
+              "example": "Card deleted successfully"
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 403,
+              "message": "Card does not belong to user"
+            },
+            {
+              "code": 404,
+              "message": "Card not found"
+            }
+          ],
+          "exampleResponse": {
+            "message": "Card deleted successfully"
+          }
+        },
+        {
+          "name": "SetDefaultCard",
+          "description": "Sets a card as default. All other cards become non-default automatically.",
+          "method": "PUT",
+          "url": "/api/profile/cards/{id}/default",
+          "requestHeaders": {
+            "Authorization": "Bearer <token>"
+          },
+          "pathParameters": {
+            "id": {
+              "type": "long",
+              "required": true,
+              "description": "Card ID to set as default",
+              "example": 2
+            }
+          },
+          "requestBody": null,
+          "responseBody": {
+            "id": {
+              "type": "long",
+              "example": 2
+            },
+            "cardNumber": {
+              "type": "string",
+              "example": "**** **** **** 5678"
+            },
+            "cardHolder": {
+              "type": "string",
+              "example": "AHMET YILMAZ"
+            },
+            "expiryMonth": {
+              "type": "string",
+              "example": "06"
+            },
+            "expiryYear": {
+              "type": "string",
+              "example": "2028"
+            },
+            "isDefault": {
+              "type": "boolean",
+              "example": true,
+              "description": "Now true for this card"
+            }
+          },
+          "errorResponses": [
+            {
+              "code": 401,
+              "message": "Unauthorized"
+            },
+            {
+              "code": 403,
+              "message": "Card does not belong to user"
+            },
+            {
+              "code": 404,
+              "message": "Card not found"
+            }
+          ],
+          "exampleResponse": {
+            "id": 2,
+            "cardNumber": "**** **** **** 5678",
+            "cardHolder": "AHMET YILMAZ",
+            "expiryMonth": "06",
+            "expiryYear": "2028",
+            "isDefault": true
+          }
         }
       ]
     }
@@ -2462,6 +2757,18 @@
       "expiryMonth": "string",
       "expiryYear": "string",
       "note": "CVV is NEVER stored"
+    },
+    "SavedCard": {
+      "id": "long",
+      "userId": "long",
+      "maskedNumber": "string (format: **** **** **** 1234)",
+      "cardHolder": "string",
+      "expiryMonth": "string (01-12)",
+      "expiryYear": "string (2027)",
+      "token": "string (UUID or payment gateway token)",
+      "isDefault": "boolean",
+      "createdAt": "timestamp",
+      "note": "CVV is NEVER stored. Full card number is NEVER stored."
     }
   },
   "validationRules": {
