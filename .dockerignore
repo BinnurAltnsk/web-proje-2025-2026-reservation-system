@@ -1,0 +1,22 @@
+# Git dosyalarini asla kopyalama
+.git
+.gitignore
+.gitattributes
+
+# Maven build ciktilarini ve gereksiz dosyalari kopyalama
+target
+.mvnwrappermaven-wrapper.jar
+
+# IDE ve OS'e ozel dosyalar
+.idea
+.iws
+.iml
+.ipr
+.vscode
+
+# Log dosyalari
+.log
+
+# Docker dosyalari
+Dockerfile
+.dockerignore
