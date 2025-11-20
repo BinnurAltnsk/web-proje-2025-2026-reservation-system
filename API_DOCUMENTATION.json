@@ -191,7 +191,7 @@
         },
         {
           "name": "Logout",
-          "description": "Logs out the current user (client should discard the JWT token)",
+          "description": "Logs out the current user  (client should discard the JWT token)",
           "method": "POST",
           "url": "/api/auth/logout",
           "requestHeaders": {
