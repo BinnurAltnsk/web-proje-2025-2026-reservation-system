@@ -1,95 +1,197 @@
 package com.teamreserve.reservationsystem.controller;
 
-import com.teamreserve.reservationsystem.dto.*;
+import com.teamreserve.reservationsystem.dto.CardRequestDTO;
+import com.teamreserve.reservationsystem.dto.SavedCardDTO;
 import com.teamreserve.reservationsystem.security.JwtTokenProvider;
 import com.teamreserve.reservationsystem.service.CardService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/profile/cards")
-@Tag(name = "Card Controller")
+@Tag(
+        name = "Card Controller",
+        description = "Yönetim için kaydedilmiş kart işlemleri - birden fazla kart desteği"
+)
 public class CardController {
 
-    @Autowired private CardService cardService;
-    @Autowired private JwtTokenProvider tokenProvider;
+    @Autowired
+    private CardService cardService;
 
+    @Autowired
+    private JwtTokenProvider tokenProvider;
+
+    /**
+     * Extract user email from JWT token in Authorization header
+     */
     private String getUserEmail(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            return tokenProvider.getUsernameFromJWT(bearerToken.substring(7));
+            String token = bearerToken.substring(7);
+            return tokenProvider.getUsernameFromJWT(token);
         }
-        throw new RuntimeException("Kullanıcı kimliği doğrulanamadı");
+        throw new RuntimeException("User not authenticated");
     }
 
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_USER')")
+    @Operation(
+            summary = "Kaydedilmiş kartları listele",
+            description = "Kullanıcının tüm kaydedilmiş kartlarını döner. Kart numaraları maskeli olarak gösterilir (**** **** **** 1234)"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Kartlar başarıyla listelendi",
+                    content = @Content(schema = @Schema(implementation = SavedCardDTO.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Yetkisiz erişim - JWT token geçersiz veya eksik",
+                    content = @Content(schema = @Schema(type = "string"))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Kullanıcı bulunamadı",
+                    content = @Content(schema = @Schema(type = "string"))
+            )
+    })
     public ResponseEntity<?> getCards(HttpServletRequest request) {
         try {
             String email = getUserEmail(request);
             List<SavedCardDTO> cards = cardService.getCards(email);
-            return ResponseEntity.ok(ApiResponse.success("Kayıtlı kartlar listelendi", cards));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiErrorResponse.error("Kartlar getirilemedi", "INTERNAL_ERROR", null));
+            return ResponseEntity.ok(cards);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
     @PostMapping
     @PreAuthorize("hasAuthority('ROLE_USER')")
-    public ResponseEntity<?> addCard(@RequestBody CardRequestDTO request, HttpServletRequest httpRequest) {
+    @Operation(
+            summary = "Yeni kart ekle",
+            description = "Kullanıcı için yeni bir kart kaydeder. CVV doğrulanır ancak saklanmaz. İlk kart otomatik olarak varsayılan kart olur."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Kart başarıyla eklendi",
+                    content = @Content(schema = @Schema(implementation = SavedCardDTO.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Geçersiz kart bilgileri",
+                    content = @Content(schema = @Schema(type = "string"))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Yetkisiz erişim",
+                    content = @Content(schema = @Schema(type = "string"))
+            )
+    })
+    public ResponseEntity<?> addCard(
+            @RequestBody CardRequestDTO request,
+            HttpServletRequest httpRequest) {
         try {
             String email = getUserEmail(httpRequest);
             SavedCardDTO card = cardService.addCard(email, request);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(ApiResponse.success("Kart başarıyla eklendi", card));
+            return ResponseEntity.ok(card);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest()
-                    .body(ApiErrorResponse.error("Geçersiz kart bilgileri", "VALIDATION_ERROR", Collections.singletonList(e.getMessage())));
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_USER')")
-    public ResponseEntity<?> deleteCard(@PathVariable Long id, HttpServletRequest request) {
+    @Operation(
+            summary = "Kartı sil",
+            description = "Kaydedilmiş bir kartı siler. Kart kullanıcıya ait olmalıdır. Varsayılan kart silinirse, bir sonraki kart varsayılan olur."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Kart başarıyla silindi",
+                    content = @Content(schema = @Schema(implementation = Map.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Yetkisiz erişim",
+                    content = @Content(schema = @Schema(type = "string"))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Bu kart size ait değil",
+                    content = @Content(schema = @Schema(type = "string"))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Kart bulunamadı",
+                    content = @Content(schema = @Schema(type = "string"))
+            )
+    })
+    public ResponseEntity<?> deleteCard(
+            @PathVariable Long id,
+            HttpServletRequest request) {
         try {
             String email = getUserEmail(request);
             cardService.deleteCard(email, id);
-            // 204 No Content
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.ok(Map.of("message", "Card deleted successfully"));
         } catch (RuntimeException e) {
-            if (e.getMessage().contains("belong to user")) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(ApiErrorResponse.error("Bu işlem için yetkiniz yok", "FORBIDDEN", Collections.singletonList(e.getMessage())));
-            }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiErrorResponse.error("Kart bulunamadı", "NOT_FOUND", Collections.singletonList(e.getMessage())));
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
     @PutMapping("/{id}/default")
     @PreAuthorize("hasAuthority('ROLE_USER')")
-    public ResponseEntity<?> setDefaultCard(@PathVariable Long id, HttpServletRequest request) {
+    @Operation(
+            summary = "Varsayılan kartı ayarla",
+            description = "Belirtilen kartı varsayılan kart olarak işaretler. Diğer tüm kartlar varsayılan olmaktan çıkar."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Varsayılan kart başarıyla ayarlandı",
+                    content = @Content(schema = @Schema(implementation = SavedCardDTO.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Yetkisiz erişim",
+                    content = @Content(schema = @Schema(type = "string"))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Bu kart size ait değil",
+                    content = @Content(schema = @Schema(type = "string"))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Kart bulunamadı",
+                    content = @Content(schema = @Schema(type = "string"))
+            )
+    })
+    public ResponseEntity<?> setDefaultCard(
+            @PathVariable Long id,
+            HttpServletRequest request) {
         try {
             String email = getUserEmail(request);
             SavedCardDTO card = cardService.setDefaultCard(email, id);
-            return ResponseEntity.ok(ApiResponse.success("Varsayılan kart güncellendi", card));
+            return ResponseEntity.ok(card);
         } catch (RuntimeException e) {
-            if (e.getMessage().contains("not found")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(ApiErrorResponse.error("Kart bulunamadı", "NOT_FOUND", Collections.singletonList(e.getMessage())));
-            }
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(ApiErrorResponse.error("Erişim reddedildi", "FORBIDDEN", Collections.singletonList(e.getMessage())));
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 }
+
