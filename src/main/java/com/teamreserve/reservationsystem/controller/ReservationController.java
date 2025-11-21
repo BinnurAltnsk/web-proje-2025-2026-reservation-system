@@ -43,7 +43,7 @@ public class ReservationController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @Operation(
             summary = "Yeni rezervasyon oluştur",
             description = "Giriş yapmış kullanıcı tarafından çağrılır. " +

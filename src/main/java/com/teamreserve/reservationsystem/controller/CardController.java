@@ -47,7 +47,7 @@ public class CardController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @Operation(
             summary = "Kaydedilmiş kartları listele",
             description = "Kullanıcının tüm kaydedilmiş kartlarını döner. Kart numaraları maskeli olarak gösterilir (**** **** **** 1234)"
@@ -80,7 +80,7 @@ public class CardController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @Operation(
             summary = "Yeni kart ekle",
             description = "Kullanıcı için yeni bir kart kaydeder. CVV doğrulanır ancak saklanmaz. İlk kart otomatik olarak varsayılan kart olur."
@@ -115,7 +115,7 @@ public class CardController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @Operation(
             summary = "Kartı sil",
             description = "Kaydedilmiş bir kartı siler. Kart kullanıcıya ait olmalıdır. Varsayılan kart silinirse, bir sonraki kart varsayılan olur."
@@ -155,7 +155,7 @@ public class CardController {
     }
 
     @PutMapping("/{id}/default")
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @Operation(
             summary = "Varsayılan kartı ayarla",
             description = "Belirtilen kartı varsayılan kart olarak işaretler. Diğer tüm kartlar varsayılan olmaktan çıkar."

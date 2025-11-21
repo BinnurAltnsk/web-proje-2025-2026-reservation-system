@@ -39,7 +39,7 @@ public class PaymentController {
     }
 
     @PostMapping("/process")
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @Operation(summary = "Ödeme işlemini tamamla")
     public ResponseEntity<?> processPayment(@RequestBody PaymentRequestDTO request, HttpServletRequest httpRequest) {
         try {
@@ -64,7 +64,7 @@ public class PaymentController {
     }
 
     @GetMapping("/my-payments")
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @Operation(summary = "Kullanıcının yaptığı ödemeleri listele")
     public List<PaymentResponseDTO> getMyPayments(HttpServletRequest request) {
         String email = getUserEmail(request);
