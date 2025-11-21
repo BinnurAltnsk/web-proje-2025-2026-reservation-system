@@ -45,7 +45,7 @@ public class ProfileController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_ADMIN')")
     @Operation(
             summary = "Kullanıcı profilini getir",
             description = "Giriş yapmış kullanıcının tam profil bilgilerini döner (ad, email, telefon, adres, kart bilgileri)"
@@ -78,7 +78,7 @@ public class ProfileController {
     }
 
     @PutMapping
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_ADMIN')")
     @Operation(
             summary = "Profil bilgilerini güncelle",
             description = "Kullanıcının kişisel bilgilerini, adres ve kart bilgilerini günceller. Tüm alanlar opsiyonel, sadece gönderilen alanlar güncellenir."
@@ -116,7 +116,7 @@ public class ProfileController {
     }
 
     @PutMapping("/password")
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_ADMIN')")
     @Operation(
             summary = "Şifre güncelle",
             description = "Kullanıcının şifresini günceller. Mevcut şifre doğrulanır ve yeni şifre BCrypt ile hash'lenerek kaydedilir."
@@ -151,7 +151,7 @@ public class ProfileController {
     }
 
     @PutMapping("/email")
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_ADMIN')")
     @Operation(
             summary = "Email güncelle",
             description = "Kullanıcının email adresini günceller. Yeni email benzersiz olmalıdır."
@@ -189,7 +189,7 @@ public class ProfileController {
     }
 
     @PutMapping("/phone")
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_ADMIN')")
     @Operation(
             summary = "Telefon güncelle",
             description = "Kullanıcının telefon numarasını günceller. 10-11 rakam olmalıdır."

@@ -82,7 +82,7 @@ public class ReservationController {
 
     // CRUD: Read (Kullanıcının kendi rezervasyonları)
     @GetMapping("/my-reservations")
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     @Operation(
             summary = "Kullanıcının kendi rezervasyonlarını listele",
             description = "JWT token üzerinden kullanıcı adı alınır ve sadece o kullanıcıya ait rezervasyonlar döner."
