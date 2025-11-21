@@ -8,18 +8,22 @@ import com.teamreserve.reservationsystem.model.ApplicationUser;
 import com.teamreserve.reservationsystem.security.JwtTokenProvider;
 import com.teamreserve.reservationsystem.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -65,20 +69,32 @@ public class AuthController {
                     content = @Content(schema = @Schema(type = "string"))
             )
     })
-    public ResponseEntity<AuthResponseDTO> authenticateUser(@RequestBody AuthRequestDTO loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getEmail().trim().toLowerCase(),
-                        loginRequest.getPassword()
-                )
-        );
+    // Dönüş tipini ResponseEntity<?> yaptık ki hem DTO hem de Hata Map'i dönebilelim.
+    public ResponseEntity<?> authenticateUser(@RequestBody AuthRequestDTO loginRequest) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getEmail().trim().toLowerCase(),
+                            loginRequest.getPassword()
+                    )
+            );
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = tokenProvider.generateToken(authentication);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String jwt = tokenProvider.generateToken(authentication);
 
-        ApplicationUser user = (ApplicationUser) authentication.getPrincipal();
+            ApplicationUser user = (ApplicationUser) authentication.getPrincipal();
 
-        return ResponseEntity.ok(new AuthResponseDTO(jwt, toUserResponse(user)));
+            return ResponseEntity.ok(new AuthResponseDTO(jwt, toUserResponse(user)));
+
+        } catch (BadCredentialsException e) {
+            // Şifre veya kullanıcı adı yanlışsa burası çalışır
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Giriş başarısız: E-posta veya şifre hatalı."));
+        } catch (Exception e) {
+            // Beklenmeyen diğer tüm hatalar (Veritabanı hatası vb.)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Sunucu hatası: " + e.getMessage()));
+        }
     }
 
     @PostMapping("/register")
@@ -102,23 +118,33 @@ public class AuthController {
         try {
             ApplicationUser user = authService.registerUser(registerRequest);
             return ResponseEntity.ok(
-                    java.util.Map.of(
+                    Map.of(
                             "message", "User registered successfully!",
                             "user", toUserResponse(user)
                     )
             );
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
+            // Service katmanından fırlatılan "Email already exists" gibi hataları yakalar
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            // Diğer beklenmeyen hatalar
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Kayıt sırasında beklenmedik bir hata oluştu."));
         }
     }
 
     @PostMapping("/logout")
     @Operation(
             summary = "Kullanıcı çıkışı yap",
-            description = "İstemciden gelen JWT tokenını mantıksal olarak geçersiz sayar (sunucu tarafında durum tutulmaz)."
+            description = "İstemciden gelen JWT tokenını mantıksal olarak geçersiz sayar."
     )
     public ResponseEntity<?> logout() {
-        SecurityContextHolder.clearContext();
-        return ResponseEntity.ok(java.util.Map.of("message", "Logged out successfully"));
+        try {
+            SecurityContextHolder.clearContext();
+            return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Çıkış işlemi sırasında hata oluştu."));
+        }
     }
 }
